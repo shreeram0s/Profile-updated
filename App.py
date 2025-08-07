@@ -207,5 +207,54 @@ if st.sidebar.button("Show Analyses"):
     else:
         df = pd.read_sql_query("SELECT * FROM analysis", conn)
     conn.close()
-    st.write(f"### Saved Analyses{' for ' + user_filter if user_filter else ''}")
-    st.dataframe(df)
+    
+    if not df.empty:
+        st.write(f"### 📊 Saved Analyses{' for ' + user_filter if user_filter else ''}")
+        
+        for index, row in df.iterrows():
+            with st.expander(f"📋 Analysis #{row['id']} - {row['user_name']} (Score: {row['matching_score']}%)"):
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.write("**👤 User:**", row['user_name'])
+                    st.write("**🎯 Matching Score:**", f"{row['matching_score']}%")
+                    
+                    # Parse skills from stored strings
+                    resume_skills = row['resume_skills'].split(',') if row['resume_skills'] else []
+                    job_skills = row['job_skills'].split(',') if row['job_skills'] else []
+                    missing_skills = row['missing_skills'].split(',') if row['missing_skills'] else []
+                    
+                    st.write("**📄 Resume Skills:**")
+                    if resume_skills:
+                        for skill in resume_skills:
+                            st.write(f"• {skill.strip()}")
+                    else:
+                        st.write("No skills found")
+                
+                with col2:
+                    st.write("**💼 Job Required Skills:**")
+                    if job_skills:
+                        for skill in job_skills:
+                            st.write(f"• {skill.strip()}")
+                    else:
+                        st.write("No skills found")
+                    
+                    st.write("**⚠️ Missing Skills:**")
+                    if missing_skills:
+                        for skill in missing_skills:
+                            st.write(f"• {skill.strip()}")
+                    else:
+                        st.write("No missing skills")
+                
+                # Color-coded score indicator
+                score = row['matching_score']
+                if score >= 80:
+                    st.success(f"🎉 Excellent Match! ({score}%)")
+                elif score >= 60:
+                    st.info(f"👍 Good Match ({score}%)")
+                elif score >= 40:
+                    st.warning(f"⚠️ Fair Match ({score}%)")
+                else:
+                    st.error(f"❌ Poor Match ({score}%)")
+    else:
+        st.info("No saved analyses found.")
