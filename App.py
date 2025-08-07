@@ -62,10 +62,21 @@ def fetch_youtube_courses(skill):
     request = youtube.search().list(q=f"{skill} course", part="snippet", maxResults=5, type="video")
     response = request.execute()
     
-    return [
-        {"Title": item["snippet"]["title"], "Channel": item["snippet"]["channelTitle"], "Video Link": f'https://www.youtube.com/watch?v={item["id"]["videoId"]}'}
-        for item in response["items"]
-    ]
+    courses = []
+    for item in response.get("items", []):
+        if (
+            "id" in item and
+            "videoId" in item["id"] and
+            "snippet" in item and
+            "title" in item["snippet"] and
+            "channelTitle" in item["snippet"]
+        ):
+            courses.append({
+                "Title": item["snippet"]["title"],
+                "Channel": item["snippet"]["channelTitle"],
+                "Video Link": f'https://www.youtube.com/watch?v={item["id"]["videoId"]}'
+            })
+    return courses
 
 # Function to extract text from files
 def extract_text(uploaded_file):
