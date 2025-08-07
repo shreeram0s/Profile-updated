@@ -128,28 +128,95 @@ def plot_skill_distribution_pie(resume_skills, job_skills):
     axes[1].set_title("Job Required Skills Distribution")
     st.pyplot(fig)
 
-# Streamlit UI
-st.title("📄 AI Resume Analyzer & Skill Enhancer")
-st.write("Upload your Resume and Job Description to analyze missing skills and get YouTube course recommendations!")
+# --- Add global custom CSS for modern look ---
+st.markdown('''
+    <style>
+    body {
+        background-color: #f4f6fb;
+    }
+    .main {
+        background-color: #f4f6fb;
+    }
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    .section-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(60,60,60,0.08);
+        padding: 2rem 2.5rem 1.5rem 2.5rem;
+        margin-bottom: 2.5rem;
+        border: 1px solid #e6e6e6;
+    }
+    .section-title {
+        font-size: 1.5em;
+        font-weight: 700;
+        color: #2d3a4a;
+        margin-bottom: 1rem;
+        margin-top: 0.5rem;
+    }
+    .chip {
+        display: inline-block;
+        padding: 0.25em 0.8em;
+        margin: 0.15em;
+        border-radius: 1em;
+        background: #e0e7ff;
+        color: #1e293b;
+        font-size: 0.95em;
+    }
+    .chip-missing {
+        background: #ffe0e0;
+        color: #b71c1c;
+    }
+    .score-badge {
+        display: inline-block;
+        padding: 0.3em 0.8em;
+        border-radius: 1em;
+        font-weight: bold;
+        color: white;
+        background: #4caf50;
+        margin-left: 1em;
+    }
+    .divider {
+        border-top: 1px solid #e0e0e0;
+        margin: 1.5rem 0 1.5rem 0;
+    }
+    </style>
+''', unsafe_allow_html=True)
 
+# --- Improved Title and Description ---
+st.markdown('<div class="section-card" style="text-align:center;"><span class="section-title">📄 AI Resume Analyzer & Skill Enhancer</span><br><span style="font-size:1.1em; color:#4b5563;">Upload your Resume and Job Description to analyze missing skills and get YouTube course recommendations!</span></div>', unsafe_allow_html=True)
+
+# --- Upload Section ---
+st.markdown('<div class="section-card">', unsafe_allow_html=True)
+st.markdown('<span class="section-title">⬆️ Upload Files</span>', unsafe_allow_html=True)
 resume_file = st.file_uploader("📄 Upload Resume (PDF, DOCX, TXT)", type=["pdf", "docx", "txt"])
 job_file = st.file_uploader("📄 Upload Job Description (PDF, DOCX, TXT)", type=["pdf", "docx", "txt"])
+st.markdown('</div>', unsafe_allow_html=True)
 
 if resume_file and job_file:
+    # --- Summary Section ---
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown('<span class="section-title">📝 Document Summaries</span>', unsafe_allow_html=True)
     resume_text = extract_text(resume_file)
     job_text = extract_text(job_file)
-    
-    st.subheader("📌 Resume Summary")
-    st.write(generate_summary(resume_text))
-    
-    st.subheader("📌 Job Description Summary")
-    st.write(generate_summary(job_text))
-    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown('**📌 Resume Summary**')
+        st.write(generate_summary(resume_text))
+    with col2:
+        st.markdown('**📌 Job Description Summary**')
+        st.write(generate_summary(job_text))
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # --- Analysis Section ---
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown('<span class="section-title">🔍 Skill Analysis & Matching</span>', unsafe_allow_html=True)
     if st.button("Analyze Skills & Matching Score"):
         resume_skills = extract_skills(resume_text)
         job_skills = extract_skills(job_text)
         missing_skills = list(set(job_skills) - set(resume_skills))
-
         st.session_state.skills_analyzed = True
         st.session_state.resume_skills = resume_skills
         st.session_state.job_skills = job_skills
@@ -157,27 +224,29 @@ if resume_file and job_file:
         st.session_state.matching_score = calculate_matching_score(resume_text, job_text)
 
     if st.session_state.skills_analyzed:
-        st.subheader("🔍 Extracted Skills")
-        st.write(f"**Resume Skills:** {', '.join(st.session_state.resume_skills)}")
-        st.write(f"**Job Required Skills:** {', '.join(st.session_state.job_skills)}")
-
-        st.subheader("📊 Resume Matching Score")
-        st.write(f"Your resume matches **{st.session_state.matching_score}%** of the job requirements.")
-
-        st.subheader("⚠️ Missing Skills")
-        if st.session_state.missing_skills:
-            st.write(f"You are missing: {', '.join(st.session_state.missing_skills)}")
-        
+        st.markdown('<div style="margin-bottom:1.5rem;">', unsafe_allow_html=True)
+        st.markdown(f'<span style="font-size:1.2em; font-weight:600;">🎯 Matching Score: <span class="score-badge">{st.session_state.matching_score}%</span></span>', unsafe_allow_html=True)
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown('**📄 Resume Skills**')
+            st.markdown(' '.join([f'<span class="chip">{skill}</span>' for skill in st.session_state.resume_skills]) or '<i>No skills found</i>', unsafe_allow_html=True)
+        with col2:
+            st.markdown('**💼 Job Required Skills**')
+            st.markdown(' '.join([f'<span class="chip">{skill}</span>' for skill in st.session_state.job_skills]) or '<i>No skills found</i>', unsafe_allow_html=True)
+        with col3:
+            st.markdown('**⚠️ Missing Skills**')
+            st.markdown(' '.join([f'<span class="chip chip-missing">{skill}</span>' for skill in st.session_state.missing_skills]) or '<i>No missing skills</i>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         plot_skill_distribution_pie(st.session_state.resume_skills, st.session_state.job_skills)
-
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         if st.button("📚 Get Recommended Courses"):
             all_courses = []
             for skill in st.session_state.missing_skills:
                 all_courses.extend(fetch_youtube_courses(skill))
             df = pd.DataFrame(all_courses)
             st.table(df if not df.empty else "No courses found.")
-
-        # --- Save Analysis Section ---
+        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         with st.form("save_analysis_form"):
             user_name = st.text_input("Enter your name to save this analysis")
             save_btn = st.form_submit_button("Save Analysis")
@@ -197,7 +266,9 @@ if resume_file and job_file:
                 conn.commit()
                 conn.close()
                 st.success("Analysis saved successfully!")
+    st.markdown('</div>', unsafe_allow_html=True)
 
+# --- Saved Analyses Section ---
 st.sidebar.header("View Saved Analyses")
 user_filter = st.sidebar.text_input("Filter by user name")
 if st.sidebar.button("Show Analyses"):
@@ -207,54 +278,37 @@ if st.sidebar.button("Show Analyses"):
     else:
         df = pd.read_sql_query("SELECT * FROM analysis", conn)
     conn.close()
-    
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
     if not df.empty:
-        st.write(f"### 📊 Saved Analyses{' for ' + user_filter if user_filter else ''}")
-        
+        st.markdown(f"<span class='section-title'>📊 Saved Analyses{' for ' + user_filter if user_filter else ''}</span>", unsafe_allow_html=True)
         for index, row in df.iterrows():
-            with st.expander(f"📋 Analysis #{row['id']} - {row['user_name']} (Score: {row['matching_score']}%)"):
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.write("**👤 User:**", row['user_name'])
-                    st.write("**🎯 Matching Score:**", f"{row['matching_score']}%")
-                    
-                    # Parse skills from stored strings
-                    resume_skills = row['resume_skills'].split(',') if row['resume_skills'] else []
-                    job_skills = row['job_skills'].split(',') if row['job_skills'] else []
-                    missing_skills = row['missing_skills'].split(',') if row['missing_skills'] else []
-                    
-                    st.write("**📄 Resume Skills:**")
-                    if resume_skills:
-                        for skill in resume_skills:
-                            st.write(f"• {skill.strip()}")
-                    else:
-                        st.write("No skills found")
-                
-                with col2:
-                    st.write("**💼 Job Required Skills:**")
-                    if job_skills:
-                        for skill in job_skills:
-                            st.write(f"• {skill.strip()}")
-                    else:
-                        st.write("No skills found")
-                    
-                    st.write("**⚠️ Missing Skills:**")
-                    if missing_skills:
-                        for skill in missing_skills:
-                            st.write(f"• {skill.strip()}")
-                    else:
-                        st.write("No missing skills")
-                
-                # Color-coded score indicator
-                score = row['matching_score']
-                if score >= 80:
-                    st.success(f"🎉 Excellent Match! ({score}%)")
-                elif score >= 60:
-                    st.info(f"👍 Good Match ({score}%)")
-                elif score >= 40:
-                    st.warning(f"⚠️ Fair Match ({score}%)")
-                else:
-                    st.error(f"❌ Poor Match ({score}%)")
+            score = row['matching_score']
+            if score >= 80:
+                badge_color = "#4caf50"
+                badge_text = "Excellent"
+            elif score >= 60:
+                badge_color = "#2196f3"
+                badge_text = "Good"
+            elif score >= 40:
+                badge_color = "#ff9800"
+                badge_text = "Fair"
+            else:
+                badge_color = "#f44336"
+                badge_text = "Poor"
+            st.markdown(f"""
+            <div style='background:#f9f9fa; border-radius:12px; box-shadow:0 2px 8px rgba(60,60,60,0.08); padding:1.5rem 2rem; margin-bottom:2rem; border:1px solid #e6e6e6;'>
+                <div style='font-size:1.2em; font-weight:700;'>
+                    👤 {row['user_name']}
+                    <span class='score-badge' style='background:{badge_color};'>{badge_text} ({score}%)</span>
+                </div>
+                <div class='section-title' style='font-size:1.1em;'>📄 Resume Skills</div>
+                {''.join([f'<span class="chip">{skill.strip()}</span>' for skill in row['resume_skills'].split(',') if skill.strip()]) or '<i>No skills found</i>'}
+                <div class='section-title' style='font-size:1.1em;'>💼 Job Required Skills</div>
+                {''.join([f'<span class="chip">{skill.strip()}</span>' for skill in row['job_skills'].split(',') if skill.strip()]) or '<i>No skills found</i>'}
+                <div class='section-title' style='font-size:1.1em;'>⚠️ Missing Skills</div>
+                {''.join([f'<span class="chip chip-missing">{skill.strip()}</span>' for skill in row['missing_skills'].split(',') if skill.strip()]) or '<i>No missing skills</i>'}
+            </div>
+            """, unsafe_allow_html=True)
     else:
         st.info("No saved analyses found.")
+    st.markdown('</div>', unsafe_allow_html=True)
